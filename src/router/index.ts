@@ -1,18 +1,34 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import Home from '../views/Home.vue';
+// src/router/index.ts
+import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
+import TotemView from '@/views/TotemView.vue'
+import DisplayView from '@/views/DisplayView.vue'
+import CounterView from '@/views/CounterView.vue'
 
-const routes = [
+const routes: RouteRecordRaw[] = [
   {
     path: '/',
-    name: 'Home',
-    component: Home
+    redirect: '/totem'
   },
-  // Adicione outras rotas aqui
-];
+  {
+    path: '/totem',
+    name: 'Totem',
+    component: TotemView
+  },
+  {
+    path: '/display',
+    name: 'Display',
+    component: DisplayView
+  },
+  {
+    path: '/counter',
+    name: 'Counter',
+    component: CounterView
+  }
+]
 
 const router = createRouter({
-  history: createWebHistory(import.meta.env.BASE_URL),
+  history: createWebHistory(),
   routes
-});
+})
 
-export default router;
+export default router
