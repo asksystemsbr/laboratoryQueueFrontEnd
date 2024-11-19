@@ -77,3 +77,35 @@ button:focus-visible {
     background-color: #f9f9f9;
   }
 }
+
+@import 'primevue/resources/themes/lara-light-blue/theme.css';
+@import 'primevue/resources/primevue.min.css';
+@import 'primeicons/primeicons.css';
+
+:root {
+  --surface-ground: #f8f9fa;
+  --surface-50: #ffffff;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.p-card {
+  background: #ffffff;
+  border-radius: 1rem;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.05);
+}
+
+.p-button {
+  padding: 1rem 2rem;
+  font-weight: 600;
+}
+
+.p-dialog {
+  border-radius: 1rem;
+}
+

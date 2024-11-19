@@ -1,0 +1,32 @@
+/* Estilo base para botões */
+.p-button {
+    background-color: #007bff; /* Azul do Bootstrap */
+    border-color: #007bff;
+    color: #fff;
+    font-weight: bold;
+  }
+  
+  .p-button:hover {
+    background-color: #0056b3;
+    border-color: #004085;
+  }
+  
+  /* Estilo base para cartões */
+  .p-card {
+    border: 1px solid #ddd;
+    border-radius: 5px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Estilo geral de fontes */
+  body {
+    font-family: Arial, sans-serif;
+    background-color: #f8f9fa; /* Cinza claro */
+    margin: 0;
+    padding: 0;
+  }
+  
+  h1, h2, h3 {
+    color: #343a40; /* Cinza escuro */
+  }
+  
