@@ -8,7 +8,6 @@ import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import Toast from 'primevue/toast'
 import ToastService from 'primevue/toastservice'
-import 'primevue/resources/primevue.min.css'; // CSS base do PrimeVue
 import 'primeicons/primeicons.css';         // Ícones necessários
 import '@/assets/custom-theme.css'; // Seu CSS customizado
 import 'bootstrap/dist/css/bootstrap.min.css';
