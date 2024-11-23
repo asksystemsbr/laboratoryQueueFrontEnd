@@ -1,6 +1,6 @@
 <template>
   <div class="counter-container bg-light min-vh-100">
-    <!-- Header mais compacto -->
+    <!-- Header -->
     <div class="bg-primary px-5 py-3 mb-4 d-flex justify-content-between align-items-center">
       <h1 class="h2 mb-0 text-white">Guichê {{ guicheAtual }}</h1>
       <div class="d-flex gap-3">
@@ -13,10 +13,10 @@
       </div>
     </div>
 
-    <!-- Container principal com largura máxima e centralizado -->
+    <!-- Conteúdo Principal -->
     <div class="container-fluid px-5">
       <div class="row g-4 mb-4">
-        <!-- Senha Atual - Ajustado para ocupar mais espaço -->
+        <!-- Senha Atual -->
         <div class="col-lg-7">
           <div class="card h-100">
             <div class="card-header bg-primary py-3">
@@ -36,7 +36,7 @@
           </div>
         </div>
 
-        <!-- Controles - Ajustado para layout mais compacto -->
+        <!-- Controles -->
         <div class="col-lg-5">
           <div class="card h-100">
             <div class="card-header bg-primary py-3">
@@ -66,7 +66,7 @@
         </div>
       </div>
 
-      <!-- Fila de Espera - Ocupando largura total -->
+      <!-- Fila de Espera -->
       <div class="card">
         <div class="card-header bg-primary py-3">
           <h2 class="h4 mb-0 text-white text-center">Fila de Espera</h2>
@@ -106,20 +106,127 @@
         </div>
       </div>
     </div>
+
+    <!-- Modal de Configurações -->
+    <div class="modal fade" id="configModal" tabindex="-1" ref="configModal">
+      <div class="modal-dialog">
+        <div class="modal-content">
+          <div class="modal-header bg-primary text-white">
+            <h5 class="modal-title">Configurações do Guichê</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Número do Guichê</label>
+              <input 
+                type="number" 
+                class="form-control" 
+                v-model="configuracoes.numeroGuiche"
+                min="1"
+              >
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Tipos de Atendimento</label>
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  v-model="configuracoes.atendePrioritario"
+                >
+                <label class="form-check-label">Atendimento Prioritário</label>
+              </div>
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  v-model="configuracoes.atendeNormal"
+                >
+                <label class="form-check-label">Atendimento Normal</label>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Notificações</label>
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  v-model="configuracoes.notificacaoSonora"
+                >
+                <label class="form-check-label">Som ao chamar senha</label>
+              </div>
+              <div class="form-check">
+                <input 
+                  class="form-check-input" 
+                  type="checkbox" 
+                  v-model="configuracoes.notificacaoVisual"
+                >
+                <label class="form-check-label">Notificação visual</label>
+              </div>
+            </div>
+
+            <div class="mb-4">
+              <label class="form-label fw-semibold">Pausas Programadas</label>
+              <div class="row g-2">
+                <div class="col">
+                  <label class="form-label small">Início</label>
+                  <input 
+                    type="time" 
+                    class="form-control" 
+                    v-model="configuracoes.pausaInicio"
+                  >
+                </div>
+                <div class="col">
+                  <label class="form-label small">Fim</label>
+                  <input 
+                    type="time" 
+                    class="form-control" 
+                    v-model="configuracoes.pausaFim"
+                  >
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+            <button type="button" class="btn btn-primary" @click="salvarConfiguracoes">
+              Salvar Configurações
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
-
 <script setup lang="ts">
 import { ref, onMounted } from 'vue'
+import { Modal } from 'bootstrap'
 import { queueService } from '@/services/api'
 import type { QueueTicket } from '@/types/queue'
 
+// Estados principais
 const guicheAtual = ref(1)
 const emAtendimento = ref(false)
 const senhaAtual = ref<QueueTicket | null>(null)
 const filaEspera = ref<QueueTicket[]>([])
 
+// Modal e configurações
+const configModal = ref<HTMLElement | null>(null)
+let modalInstance: Modal | null = null
+
+const configuracoes = ref({
+  numeroGuiche: 1,
+  atendePrioritario: true,
+  atendeNormal: true,
+  notificacaoSonora: true,
+  notificacaoVisual: true,
+  pausaInicio: '',
+  pausaFim: ''
+})
+
+// Mock de dados
 const mockFila: QueueTicket[] = [
   { 
     id: 1, 
@@ -147,6 +254,7 @@ const mockFila: QueueTicket[] = [
   }
 ]
 
+// Métodos de controle
 const toggleAtendimento = () => {
   emAtendimento.value = !emAtendimento.value
 }
@@ -187,12 +295,33 @@ const rechamarSenha = async () => {
   }
 }
 
+// Métodos de configuração
 const abrirConfigGuiche = () => {
-  console.log('Abrir configurações do guichê')
+  if (modalInstance) {
+    modalInstance.show()
+  }
 }
 
+const salvarConfiguracoes = async () => {
+  try {
+    // Integração futura com API
+    guicheAtual.value = configuracoes.value.numeroGuiche
+    
+    if (modalInstance) {
+      modalInstance.hide()
+    }
+  } catch (error) {
+    console.error('Erro ao salvar configurações:', error)
+  }
+}
+
+// Lifecycle hooks
 onMounted(() => {
   filaEspera.value = mockFila
+  
+  if (configModal.value) {
+    modalInstance = new Modal(configModal.value)
+  }
 })
 </script>
 
@@ -347,5 +476,25 @@ onMounted(() => {
   .card-body {
     padding: 1rem;
   }
+}
+.modal-header {
+  border-bottom: none;
+}
+
+.modal-footer {
+  border-top: none;
+}
+
+.form-label {
+  color: #495057;
+}
+
+.form-check {
+  margin-bottom: 0.5rem;
+}
+
+.form-control:focus {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
 }
 </style>

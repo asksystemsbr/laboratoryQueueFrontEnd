@@ -12,7 +12,7 @@
     "paths": {
       "@/*": ["src/*"]
     },
-    "types": ["node", "vite/client"],
+    "types": ["node", "vite/client", "bootstrap"],
     "lib": ["esnext", "dom", "dom.iterable"]
   },
   "include": [
