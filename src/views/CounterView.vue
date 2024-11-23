@@ -1,20 +1,351 @@
-<script setup lang="ts">
-import { ref } from 'vue';
-import { queueService } from '@/services/api';
-import type { QueueTicket } from '@/types/queue';
+<template>
+  <div class="counter-container bg-light min-vh-100">
+    <!-- Header mais compacto -->
+    <div class="bg-primary px-5 py-3 mb-4 d-flex justify-content-between align-items-center">
+      <h1 class="h2 mb-0 text-white">Guichê {{ guicheAtual }}</h1>
+      <div class="d-flex gap-3">
+        <button class="btn btn-light px-4" @click="toggleAtendimento">
+          {{ emAtendimento ? 'Pausar' : 'Iniciar' }} Atendimento
+        </button>
+        <button class="btn btn-outline-light px-4" @click="abrirConfigGuiche">
+          Configurar
+        </button>
+      </div>
+    </div>
 
-const numeroGuiche = ref(1);
-const senhaAtual = ref<QueueTicket | null>(null);
-const loading = ref(false);
+    <!-- Container principal com largura máxima e centralizado -->
+    <div class="container-fluid px-5">
+      <div class="row g-4 mb-4">
+        <!-- Senha Atual - Ajustado para ocupar mais espaço -->
+        <div class="col-lg-7">
+          <div class="card h-100">
+            <div class="card-header bg-primary py-3">
+              <h2 class="h4 mb-0 text-white text-center">Senha Atual</h2>
+            </div>
+            <div class="card-body d-flex align-items-center justify-content-center bg-white py-5">
+              <div v-if="senhaAtual" class="text-center">
+                <h1 class="super-display mb-3 text-dark senha-destaque">{{ senhaAtual.numero }}</h1>
+                <span :class="['badge fs-4 mb-2', senhaAtual.tipo === 'P' ? 'bg-success' : 'bg-primary']">
+                  {{ senhaAtual.tipo === 'P' ? 'Preferencial' : 'Normal' }}
+                </span>
+              </div>
+              <div v-else class="text-center">
+                <h3 class="text-muted">Nenhuma senha em atendimento</h3>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Controles - Ajustado para layout mais compacto -->
+        <div class="col-lg-5">
+          <div class="card h-100">
+            <div class="card-header bg-primary py-3">
+              <h2 class="h4 mb-0 text-white text-center">Controles</h2>
+            </div>
+            <div class="card-body d-flex flex-column justify-content-center gap-3 p-4 bg-white">
+              <button 
+                class="btn btn-primary btn-lg py-3 fw-medium"
+                @click="chamarProxima"
+                :disabled="!emAtendimento">
+                Chamar Próxima Senha
+              </button>
+              <button 
+                class="btn btn-success btn-lg py-3 fw-medium"
+                @click="finalizarAtendimento"
+                :disabled="!senhaAtual">
+                Finalizar Atendimento
+              </button>
+              <button 
+                class="btn btn-warning btn-lg py-3 fw-medium"
+                @click="rechamarSenha"
+                :disabled="!senhaAtual">
+                Rechamar Senha Atual
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fila de Espera - Ocupando largura total -->
+      <div class="card">
+        <div class="card-header bg-primary py-3">
+          <h2 class="h4 mb-0 text-white text-center">Fila de Espera</h2>
+        </div>
+        <div class="card-body p-4 bg-white">
+          <div class="table-responsive">
+            <table class="table table-hover mb-0">
+              <thead>
+                <tr>
+                  <th class="fw-semibold fs-5 py-3">Senha</th>
+                  <th class="fw-semibold fs-5 py-3">Tipo</th>
+                  <th class="fw-semibold fs-5 py-3">Status</th>
+                  <th class="fw-semibold fs-5 py-3">Guichê</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="senha in filaEspera" :key="senha.id" class="senha-row">
+                  <td class="py-3">
+                    <span class="senha-numero">{{ senha.numero }}</span>
+                  </td>
+                  <td class="py-3">
+                    <span 
+                      :class="['badge-tipo', senha.tipo === 'P' ? 'bg-success' : 'bg-primary']">
+                      {{ senha.tipo === 'P' ? 'Preferencial' : 'Normal' }}
+                    </span>
+                  </td>
+                  <td class="py-3">
+                    <span class="badge-status">{{ senha.status }}</span>
+                  </td>
+                  <td class="py-3">
+                    <span class="guiche-numero">{{ senha.guiche || '-' }}</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</template>
+
+
+<script setup lang="ts">
+import { ref, onMounted } from 'vue'
+import { queueService } from '@/services/api'
+import type { QueueTicket } from '@/types/queue'
+
+const guicheAtual = ref(1)
+const emAtendimento = ref(false)
+const senhaAtual = ref<QueueTicket | null>(null)
+const filaEspera = ref<QueueTicket[]>([])
+
+const mockFila: QueueTicket[] = [
+  { 
+    id: 1, 
+    numero: 'A123', 
+    tipo: 'N', 
+    status: 'AGUARDANDO',
+    guiche: undefined,
+    dataCriacao: new Date()
+  },
+  { 
+    id: 2, 
+    numero: 'P052', 
+    tipo: 'P', 
+    status: 'AGUARDANDO',
+    guiche: undefined,
+    dataCriacao: new Date()
+  },
+  { 
+    id: 3, 
+    numero: 'A124', 
+    tipo: 'N', 
+    status: 'AGUARDANDO',
+    guiche: undefined,
+    dataCriacao: new Date()
+  }
+]
+
+const toggleAtendimento = () => {
+  emAtendimento.value = !emAtendimento.value
+}
 
 const chamarProxima = async () => {
   try {
-    loading.value = true;
-    senhaAtual.value = await queueService.chamarProxima(numeroGuiche.value);
+    const proxima = filaEspera.value.shift()
+    if (proxima) {
+      senhaAtual.value = {
+        ...proxima,
+        status: 'EM_ATENDIMENTO',
+        guiche: guicheAtual.value
+      }
+    }
   } catch (error) {
-    console.error('Erro ao chamar próxima senha:', error);
-  } finally {
-    loading.value = false;
+    console.error('Erro ao chamar próxima senha:', error)
   }
-};
+}
+
+const finalizarAtendimento = async () => {
+  try {
+    if (senhaAtual.value) {
+      senhaAtual.value.status = 'FINALIZADO'
+    }
+    senhaAtual.value = null
+  } catch (error) {
+    console.error('Erro ao finalizar atendimento:', error)
+  }
+}
+
+const rechamarSenha = async () => {
+  try {
+    if (senhaAtual.value) {
+      senhaAtual.value.status = 'CHAMANDO'
+    }
+  } catch (error) {
+    console.error('Erro ao rechamar senha:', error)
+  }
+}
+
+const abrirConfigGuiche = () => {
+  console.log('Abrir configurações do guichê')
+}
+
+onMounted(() => {
+  filaEspera.value = mockFila
+})
 </script>
+
+<style scoped>
+.counter-container {
+  background-color: #f8f9fa;
+}
+
+.card {
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.card-header {
+  border-bottom: none;
+}
+
+.table {
+  color: #212529;
+}
+
+.senha-row {
+  transition: all 0.2s ease-in-out;
+}
+
+.senha-row:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.senha-numero {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #212529;
+}
+
+.badge-tipo {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-weight: 500;
+  font-size: 0.9rem;
+  color: #fff;
+  text-align: center;
+  min-width: 100px;
+}
+
+.badge-status {
+  display: inline-block;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  background-color: #e9ecef;
+  color: #495057;
+  font-weight: 500;
+  text-transform: uppercase;
+  font-size: 0.85rem;
+  letter-spacing: 0.5px;
+}
+
+.guiche-numero {
+  font-size: 1.1rem;
+  font-weight: 500;
+  color: #495057;
+}
+
+.btn-lg {
+  font-size: 1.1rem;
+  padding: 1rem;
+}
+
+.btn:disabled {
+  opacity: 0.65;
+}
+
+.senha-destaque {
+  color: #212529;
+}
+
+.senha-row, .badge-tipo, .badge-status {
+  transition: all 0.2s ease-in-out;
+}
+
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .senha-numero {
+    font-size: 1rem;
+  }
+  
+  .badge-tipo {
+    min-width: 80px;
+    padding: 0.4rem 0.8rem;
+  }
+
+  .display-1 {
+    font-size: 4rem;
+  }
+}
+
+/* Novos estilos para melhor ocupação do espaço */
+.counter-container {
+  background-color: #f8f9fa;
+  padding-bottom: 2rem;
+}
+
+.super-display {
+  font-size: 8rem;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.card {
+  border: 1px solid rgba(0, 0, 0, 0.125);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+/* Ajustes responsivos para telas grandes */
+@media (min-width: 1400px) {
+  .super-display {
+    font-size: 10rem;
+  }
+  
+  .card-body {
+    padding: 2rem;
+  }
+  
+  .btn-lg {
+    padding: 1.2rem;
+    font-size: 1.25rem;
+  }
+}
+
+/* Ajustes para telas médias */
+@media (min-width: 992px) and (max-width: 1399px) {
+  .super-display {
+    font-size: 7rem;
+  }
+}
+
+/* Ajustes para telas pequenas */
+@media (max-width: 991px) {
+  .super-display {
+    font-size: 5rem;
+  }
+  
+  .container-fluid {
+    padding-left: 1rem;
+    padding-right: 1rem;
+  }
+  
+  .card-body {
+    padding: 1rem;
+  }
+}
+</style>

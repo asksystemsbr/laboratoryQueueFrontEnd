@@ -1,7 +1,45 @@
-```vue
 <template>
-  <div class="display-container bg-dark text-white min-vh-100">
-    <!-- Template mantido igual -->
+  <div class="display-container bg-dark text-white">
+    <div class="content-wrapper p-4 h-100 d-flex flex-column justify-content-center">
+      <!-- Senha Atual -->
+      <div class="senha-atual bg-primary rounded p-4 mb-4">
+        <h2 class="fw-bold mb-3">SENHA ATUAL</h2>
+        <div class="numero-atual fw-bold mb-3">
+          {{ senhaAtual?.numero || '--' }}
+        </div>
+        <div class="guiche h2 mb-0">
+          GUICHÊ {{ senhaAtual?.guiche || '--' }}
+        </div>
+      </div>
+      <div class="d-flex gap-4">
+        <!-- Próximas Senhas -->
+        <div class="proximas-senhas bg-secondary bg-opacity-25 rounded p-4 flex-grow-1">
+          <h3 class="fw-bold mb-4 text-center">PRÓXIMAS SENHAS</h3>
+          <div class="d-flex justify-content-center gap-4">
+            <div v-for="senha in dados?.espera"
+                :key="senha.id"
+                :class="['senha-card', 'p-3', 'rounded', 'fw-bold', 'h3', 'text-center',
+                        senha.tipo === 'P' ? 'bg-success' : 'bg-primary']">
+              {{ senha.numero }}
+            </div>
+          </div>
+        </div>
+        <!-- Últimas Chamadas -->
+        <div class="ultimas-chamadas bg-secondary bg-opacity-25 rounded p-4" style="width: 350px">
+          <h3 class="fw-bold mb-4 text-center">ÚLTIMAS CHAMADAS</h3>
+          <div class="d-flex flex-column gap-3">
+            <div v-for="senha in dados?.ultimasChamadas"
+                :key="senha.id"
+                class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-3">
+              <span class="h4 mb-0">{{ senha.numero }}</span>
+              <span :class="['badge', senha.tipo === 'P' ? 'bg-success' : 'bg-primary']">
+                Guichê {{ senha.guiche }}
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -11,66 +49,67 @@ import { queueService } from '@/services/api'
 import type { QueueTicket, QueueDisplay } from '@/types/queue'
 
 const senhaAtual = ref<QueueTicket | null>(null)
-const senhasEspera = ref<QueueTicket[]>([])
-const ultimasChamadas = ref<QueueTicket[]>([])
-const audio = new Audio('/sounds/bell.mp3')
+const dados = ref<QueueDisplay>({
+  atual: null,
+  espera: [],
+  ultimasChamadas: []
+})
 
 const atualizarPainel = async () => {
   try {
-    const dados = await queueService.obterPainel()
-    
-    if (dados.atual?.numero !== senhaAtual.value?.numero) {
-      audio.play()
-      senhaAtual.value = dados.atual
-    }
-    
-    senhasEspera.value = dados.espera
-    ultimasChamadas.value = dados.ultimasChamadas
+    const response = await queueService.obterPainel()
+    senhaAtual.value = response.atual
+    dados.value = response
   } catch (error) {
     console.error('Erro ao atualizar painel:', error)
   }
 }
 
-// Definindo o tipo correto para o intervalo
-let intervalId: ReturnType<typeof setInterval>
+let intervalId: number
 
 onMounted(() => {
   atualizarPainel()
-  intervalId = setInterval(atualizarPainel, 5000)
+  intervalId = window.setInterval(atualizarPainel, 5000)
 })
 
 onUnmounted(() => {
-  if (intervalId) {
-    clearInterval(intervalId)
-  }
+  window.clearInterval(intervalId)
 })
 </script>
 
-```
-
 <style scoped>
 .display-container {
-  overflow: hidden;
+  font-family: Arial, sans-serif;
+  height: 100vh;
+  display: flex;
+  align-items: center;
 }
 
-.current-ticket {
-  animation: pulse 2s ease-in-out infinite;
+.content-wrapper {
+  width: 100%;
 }
 
-.waiting-ticket {
+.senha-atual {
+  animation: pulse 2s infinite ease-in-out;
+}
+
+.numero-atual {
+  font-size: 11rem;
+  line-height: 1;
+}
+
+.senha-card {
+  min-width: 140px;
   transition: transform 0.3s ease;
 }
 
-.waiting-ticket:hover {
+.senha-card:hover {
   transform: scale(1.05);
 }
 
-.last-called {
-  transition: background-color 0.3s ease;
-}
-
-.last-called:hover {
-  background-color: #f8f9fa;
+.badge {
+  font-size: 1rem;
+  padding: 8px 16px;
 }
 
 @keyframes pulse {
@@ -79,15 +118,47 @@ onUnmounted(() => {
   100% { transform: scale(1); }
 }
 
-/* Responsividade */
-@media (max-width: 768px) {
-  .display-container {
-    font-size: 0.9rem;
+/* Ajustes para telas maiores */
+@media (min-width: 1400px) {
+  .numero-atual {
+    font-size: 13rem;
   }
+  .senha-card {
+    min-width: 160px;
+    font-size: 2rem;
+  }
+  .badge {
+    font-size: 1.1rem;
+    padding: 10px 20px;
+  }
+}
 
-  .current-number {
-    font-size: 4rem !important;
+/* Ajustes para telas menores */
+@media (max-width: 1200px) {
+  .numero-atual {
+    font-size: 9rem;
+  }
+  .senha-card {
+    min-width: 120px;
+    font-size: 1.6rem;
+  }
+  .p-4 {
+    padding: 1rem !important;
+  }
+  .gap-4 {
+    gap: 1rem !important;
+  }
+}
+
+@media (max-width: 768px) {
+  .d-flex {
+    flex-direction: column !important;
+  }
+  .ultimas-chamadas {
+    width: 100% !important;
+  }
+  .numero-atual {
+    font-size: 7rem;
   }
 }
 </style>
-```
