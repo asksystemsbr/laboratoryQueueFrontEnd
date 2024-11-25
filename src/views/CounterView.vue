@@ -109,91 +109,126 @@
 
     <!-- Modal de Configurações -->
     <div class="modal fade" id="configModal" tabindex="-1" ref="configModal">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header bg-primary text-white">
-            <h5 class="modal-title">Configurações do Guichê</h5>
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header bg-primary text-white">
+          <h5 class="modal-title">Configurações do Guichê</h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+          <!-- Número do Guichê -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Número do Guichê</label>
+            <input 
+              type="number" 
+              class="form-control" 
+              v-model="configuracoes.numeroGuiche"
+              min="1"
+            >
           </div>
-          <div class="modal-body">
-            <div class="mb-4">
-              <label class="form-label fw-semibold">Número do Guichê</label>
+
+          <!-- Tipos de Atendimento -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Tipos de Atendimento</label>
+            <div class="form-check">
               <input 
-                type="number" 
-                class="form-control" 
-                v-model="configuracoes.numeroGuiche"
-                min="1"
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="configuracoes.tiposAtendimento.atendimentoOrcamento"
               >
+              <label class="form-check-label">Atendimento/Orçamento</label>
             </div>
-
-            <div class="mb-4">
-              <label class="form-label fw-semibold">Tipos de Atendimento</label>
-              <div class="form-check">
-                <input 
-                  class="form-check-input" 
-                  type="checkbox" 
-                  v-model="configuracoes.atendePrioritario"
-                >
-                <label class="form-check-label">Atendimento Prioritário</label>
-              </div>
-              <div class="form-check">
-                <input 
-                  class="form-check-input" 
-                  type="checkbox" 
-                  v-model="configuracoes.atendeNormal"
-                >
-                <label class="form-check-label">Atendimento Normal</label>
-              </div>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="configuracoes.tiposAtendimento.preferencial"
+              >
+              <label class="form-check-label">Preferencial</label>
             </div>
-
-            <div class="mb-4">
-              <label class="form-label fw-semibold">Notificações</label>
-              <div class="form-check">
-                <input 
-                  class="form-check-input" 
-                  type="checkbox" 
-                  v-model="configuracoes.notificacaoSonora"
-                >
-                <label class="form-check-label">Som ao chamar senha</label>
-              </div>
-              <div class="form-check">
-                <input 
-                  class="form-check-input" 
-                  type="checkbox" 
-                  v-model="configuracoes.notificacaoVisual"
-                >
-                <label class="form-check-label">Notificação visual</label>
-              </div>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="configuracoes.tiposAtendimento.vacina"
+              >
+              <label class="form-check-label">Vacina</label>
             </div>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="configuracoes.tiposAtendimento.agendarExames"
+              >
+              <label class="form-check-label">Agendar Exames</label>
+            </div>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="configuracoes.tiposAtendimento.retirarResultados"
+              >
+              <label class="form-check-label">Retirar Resultados</label>
+            </div>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="configuracoes.tiposAtendimento.examesAgendados"
+              >
+              <label class="form-check-label">Exames Agendados</label>
+            </div>
+          </div>
 
-            <div class="mb-4">
-              <label class="form-label fw-semibold">Pausas Programadas</label>
-              <div class="row g-2">
-                <div class="col">
-                  <label class="form-label small">Início</label>
-                  <input 
-                    type="time" 
-                    class="form-control" 
-                    v-model="configuracoes.pausaInicio"
-                  >
-                </div>
-                <div class="col">
-                  <label class="form-label small">Fim</label>
-                  <input 
-                    type="time" 
-                    class="form-control" 
-                    v-model="configuracoes.pausaFim"
-                  >
-                </div>
+          <!-- Notificações -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Notificações</label>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="configuracoes.notificacaoSonora"
+              >
+              <label class="form-check-label">Som ao chamar senha</label>
+            </div>
+            <div class="form-check">
+              <input 
+                class="form-check-input" 
+                type="checkbox" 
+                v-model="configuracoes.notificacaoVisual"
+              >
+              <label class="form-check-label">Notificação visual</label>
+            </div>
+          </div>
+
+          <!-- Pausas Programadas -->
+          <div class="mb-4">
+            <label class="form-label fw-semibold">Pausas Programadas</label>
+            <div class="row g-2">
+              <div class="col">
+                <label class="form-label small">Início</label>
+                <input 
+                  type="time" 
+                  class="form-control" 
+                  v-model="configuracoes.pausaInicio"
+                >
+              </div>
+              <div class="col">
+                <label class="form-label small">Fim</label>
+                <input 
+                  type="time" 
+                  class="form-control" 
+                  v-model="configuracoes.pausaFim"
+                >
               </div>
             </div>
           </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-            <button type="button" class="btn btn-primary" @click="salvarConfiguracoes">
-              Salvar Configurações
-            </button>
-          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+          <button type="button" class="btn btn-primary" @click="salvarConfiguracoes">
+            Salvar Configurações
+          </button>
         </div>
       </div>
     </div>
@@ -216,15 +251,43 @@ const filaEspera = ref<QueueTicket[]>([])
 const configModal = ref<HTMLElement | null>(null)
 let modalInstance: Modal | null = null
 
-const configuracoes = ref({
+// Interface para tipos de atendimento
+interface TiposAtendimento {
+  atendimentoOrcamento: boolean;
+  preferencial: boolean;
+  vacina: boolean;
+  agendarExames: boolean;
+  retirarResultados: boolean;
+  examesAgendados: boolean;
+}
+
+// Interface para configurações
+interface Configuracoes {
+  numeroGuiche: number;
+  tiposAtendimento: TiposAtendimento;
+  notificacaoSonora: boolean;
+  notificacaoVisual: boolean;
+  pausaInicio: string;
+  pausaFim: string;
+}
+
+// Estado das configurações
+const configuracoes = ref<Configuracoes>({
   numeroGuiche: 1,
-  atendePrioritario: true,
-  atendeNormal: true,
+  tiposAtendimento: {
+    atendimentoOrcamento: true,
+    preferencial: true,
+    vacina: true,
+    agendarExames: true,
+    retirarResultados: true,
+    examesAgendados: true
+  },
   notificacaoSonora: true,
   notificacaoVisual: true,
   pausaInicio: '',
   pausaFim: ''
 })
+
 
 // Mock de dados
 const mockFila: QueueTicket[] = [
@@ -314,6 +377,7 @@ const salvarConfiguracoes = async () => {
     console.error('Erro ao salvar configurações:', error)
   }
 }
+
 
 // Lifecycle hooks
 onMounted(() => {
@@ -496,5 +560,19 @@ onMounted(() => {
 .form-control:focus {
   border-color: #0d6efd;
   box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+}
+
+.form-check {
+  margin-bottom: 0.75rem;
+}
+
+.form-check-input:checked {
+  background-color: #0d6efd;
+  border-color: #0d6efd;
+}
+
+.form-check-label {
+  color: #495057;
+  font-size: 0.95rem;
 }
 </style>
