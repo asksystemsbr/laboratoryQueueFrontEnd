@@ -240,7 +240,7 @@
 import { ref, onMounted } from 'vue'
 import { Modal } from 'bootstrap'
 import { queueService } from '@/services/api'
-import type { QueueTicket } from '@/types/queue'
+import { StatusSenha, TipoSenha, type QueueTicket } from '@/types/queue'
 
 // Estados principais
 const guicheAtual = ref(1)
@@ -294,26 +294,20 @@ const configuracoes = ref<Configuracoes>({
 const mockFila: QueueTicket[] = [
   { 
     id: 1, 
-    numero: 'A123', 
-    tipo: 'N', 
-    status: 'AGUARDANDO',
-    guiche: undefined,
+    numero: 'AO123', 
+    tipo: TipoSenha.ATENDIMENTO_ORCAMENTO, 
+    status: StatusSenha.AGUARDANDO,
+    guiche: 0, // Usar 0 em vez de undefined
+    horario: new Date(),
     dataCriacao: new Date()
   },
   { 
     id: 2, 
     numero: 'P052', 
-    tipo: 'P', 
-    status: 'AGUARDANDO',
-    guiche: undefined,
-    dataCriacao: new Date()
-  },
-  { 
-    id: 3, 
-    numero: 'A124', 
-    tipo: 'N', 
-    status: 'AGUARDANDO',
-    guiche: undefined,
+    tipo: TipoSenha.PREFERENCIAL,
+    status: StatusSenha.AGUARDANDO,
+    guiche: 0,
+    horario: new Date(),
     dataCriacao: new Date()
   }
 ]

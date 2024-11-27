@@ -1,13 +1,18 @@
-// src/router/index.ts
 import { createRouter, createWebHistory, type RouteRecordRaw } from 'vue-router'
 import TotemView from '@/views/TotemView.vue'
 import DisplayView from '@/views/DisplayView.vue'
 import CounterView from '@/views/CounterView.vue'
+import HomeView from '@/views/HomeView.vue'
 
 const routes: RouteRecordRaw[] = [
   {
+    path: '/home',
+    name: 'Home',
+    component: HomeView
+  },
+  {
     path: '/',
-    redirect: '/totem'
+    redirect: '/home'
   },
   {
     path: '/totem',
