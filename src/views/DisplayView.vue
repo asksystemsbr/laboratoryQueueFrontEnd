@@ -1,8 +1,12 @@
+```vue
 <template>
   <div class="display-container bg-dark text-white">
     <div class="content-wrapper p-4 h-100 d-flex flex-column justify-content-center">
       <!-- Senha Atual -->
-      <div class="senha-atual bg-primary rounded p-4 mb-4">
+      <div 
+        class="senha-atual bg-primary rounded p-4 mb-4"
+        :class="{ 'animate-call': isNewCall }"
+      >
         <h2 class="fw-bold mb-3">SENHA ATUAL</h2>
         <div class="numero-atual fw-bold mb-3">
           {{ senhaAtual?.numero || '--' }}
@@ -19,7 +23,7 @@
             <div v-for="senha in dados?.espera"
                 :key="senha.id"
                 :class="['senha-card', 'p-3', 'rounded', 'fw-bold', 'h3', 'text-center',
-                        senha.tipo === 'P' ? 'bg-success' : 'bg-primary']">
+                      getTipoBgClass(senha.tipo)]">
               {{ senha.numero }}
             </div>
           </div>
@@ -32,7 +36,7 @@
                 :key="senha.id"
                 class="d-flex justify-content-between align-items-center border-bottom border-secondary pb-3">
               <span class="h4 mb-0">{{ senha.numero }}</span>
-              <span :class="['badge', senha.tipo === 'P' ? 'bg-success' : 'bg-primary']">
+              <span :class="['badge', getTipoBgClass(senha.tipo)]">
                 Guichê {{ senha.guiche }}
               </span>
             </div>
@@ -40,13 +44,14 @@
         </div>
       </div>
     </div>
+    <audio ref="audioCall" src="/sounds/service-bell.mp3" preload="auto"></audio>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue'
+import { ref, onMounted, onUnmounted, watch } from 'vue'
 import { queueService } from '@/services/api'
-import type { QueueTicket, QueueDisplay } from '@/types/queue'
+import { TipoSenha, type QueueTicket, type QueueDisplay } from '@/types/queue'
 
 const senhaAtual = ref<QueueTicket | null>(null)
 const dados = ref<QueueDisplay>({
@@ -54,18 +59,38 @@ const dados = ref<QueueDisplay>({
   espera: [],
   ultimasChamadas: []
 })
+const audioCall = ref<HTMLAudioElement | null>(null)
+const isNewCall = ref(false)
+let intervalId: number
+
+const getTipoBgClass = (tipo: TipoSenha): string => {
+  const classMap: Record<TipoSenha, string> = {
+    [TipoSenha.ATENDIMENTO_ORCAMENTO]: 'bg-primary',
+    [TipoSenha.PREFERENCIAL]: 'bg-success',
+    [TipoSenha.VACINA]: 'bg-info',
+    [TipoSenha.AGENDAR_EXAMES]: 'bg-warning',
+    [TipoSenha.RETIRAR_RESULTADOS]: 'bg-danger',
+    [TipoSenha.EXAMES_AGENDADOS]: 'bg-secondary'
+  }
+  return classMap[tipo]
+}
 
 const atualizarPainel = async () => {
   try {
     const response = await queueService.obterPainel()
+    if (response.atual?.id !== senhaAtual.value?.id) {
+      isNewCall.value = true
+      await playSound()
+      setTimeout(() => {
+        isNewCall.value = false
+      }, 3000)
+    }
     senhaAtual.value = response.atual
     dados.value = response
   } catch (error) {
     console.error('Erro ao atualizar painel:', error)
   }
 }
-
-let intervalId: number
 
 onMounted(() => {
   atualizarPainel()
@@ -75,6 +100,20 @@ onMounted(() => {
 onUnmounted(() => {
   window.clearInterval(intervalId)
 })
+
+const playSound = async () => {
+  try {
+    if (audioCall.value) {
+      audioCall.value.currentTime = 0
+      await audioCall.value.play()
+    }
+  } catch (error) {
+    console.error('Erro ao reproduzir som:', error)
+  }
+}
+
+
+
 </script>
 
 <style scoped>
@@ -112,13 +151,22 @@ onUnmounted(() => {
   padding: 8px 16px;
 }
 
+.animate-call {
+  animation: callAttention 3s ease-in-out;
+}
+
 @keyframes pulse {
   0% { transform: scale(1); }
   50% { transform: scale(1.02); }
   100% { transform: scale(1); }
 }
 
-/* Ajustes para telas maiores */
+@keyframes callAttention {
+  0% { transform: scale(1); background-color: var(--bs-warning); }
+  50% { transform: scale(1.05); background-color: var(--bs-warning); }
+  100% { transform: scale(1); background-color: var(--bs-primary); }
+}
+
 @media (min-width: 1400px) {
   .numero-atual {
     font-size: 13rem;
@@ -133,7 +181,6 @@ onUnmounted(() => {
   }
 }
 
-/* Ajustes para telas menores */
 @media (max-width: 1200px) {
   .numero-atual {
     font-size: 9rem;
@@ -161,4 +208,5 @@ onUnmounted(() => {
     font-size: 7rem;
   }
 }
+
 </style>

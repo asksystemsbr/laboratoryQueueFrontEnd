@@ -1,41 +1,51 @@
+```vue
 <template>
-  <div class="toten-container bg-light min-vh-100">
-    <!-- Cabeçalho -->
+  <div class="totem-container bg-light min-vh-100">
+    <!-- Header -->
     <header class="text-center py-5">
       <h1 class="display-4 fw-bold">Sistema de Senhas</h1>
       <p class="lead">Selecione o tipo de atendimento desejado</p>
     </header>
 
-    <!-- Opções de Senhas -->
-    <div class="container">
+    <!-- Conteúdo Principal -->
+    <div class="container px-4">
       <div class="row g-4">
-        <div 
-          v-for="(botao, index) in configuracoes.botoes" 
-          :key="index" 
-          class="col-md-4"
-        >
-          <div class="card shadow-sm border-0">
-            <div class="card-body text-center">
+        <div v-for="tipo in tiposAtendimento" :key="tipo.value" class="col-md-4">
+          <div class="card h-100 border-0 shadow-sm service-card">
+            <div class="card-body d-flex flex-column align-items-center p-4">
               <div 
                 class="icon-wrapper mb-4"
-                :style="{ backgroundColor: botao.color + '33' }"
+                :style="{ backgroundColor: `${tipo.color}33` }"
               >
-                <img 
-                  :src="botao.icon" 
-                  alt="Ícone" 
-                  class="icon"
-                />
+                <i :class="['bi', tipo.icon, 'fs-1']" :style="{ color: tipo.color }"></i>
               </div>
-              <h5 class="card-title fw-bold">{{ botao.label }}</h5>
-              <p class="text-muted small">{{ botao.description }}</p>
+              <h5 class="card-title fw-bold mb-3">{{ tipo.label }}</h5>
+              <p class="text-muted small mb-4">{{ tipo.description }}</p>
               <button 
-                class="btn btn-primary w-100 fw-bold"
-                :style="{ backgroundColor: botao.color }"
-                @click="executarAcao(botao.action)"
+                class="btn btn-lg w-100 mt-auto fw-bold text-white"
+                :style="{ backgroundColor: tipo.color }"
+                @click="gerarSenha(tipo.value)"
+                :disabled="isLoading"
               >
-                Gerar Senha {{ botao.label }}
+                Gerar Senha
               </button>
             </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal de Senha Gerada -->
+    <div class="modal fade" ref="successModal" tabindex="-1">
+      <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+          <div class="modal-body text-center p-5">
+            <div class="mb-4">
+              <i class="bi bi-check-circle-fill text-success fs-1"></i>
+            </div>
+            <h2 class="mb-4">Sua senha é:</h2>
+            <div class="display-1 fw-bold mb-4">{{ senhaNova?.numero }}</div>
+            <p class="text-muted">Aguarde ser chamado no painel</p>
           </div>
         </div>
       </div>
@@ -44,128 +54,99 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted } from 'vue'
+import { Modal } from 'bootstrap'
+import { queueService } from '@/services/api'
+import { TipoSenha, type QueueTicket } from '@/types/queue'
 
-// Configurações dos botões do Totem
-const configuracoes = ref({
-  botoes: [
-    {
-      label: "Atendimento/Orçamento",
-      description: "Atendimento relacionado a orçamentos.",
-      color: "#FF5733",
-      action: "orcamento",
-      icon: "https://via.placeholder.com/50/FF5733/FFFFFF?text=$" // Ícone substituível
-    },
-    {
-      label: "Preferencial",
-      description: "Atendimento prioritário.",
-      color: "#33FF57",
-      action: "preferencial",
-      icon: "https://via.placeholder.com/50/33FF57/FFFFFF?text=♥" // Ícone substituível
-    },
-    {
-      label: "Vacina",
-      description: "Agendamento e aplicação de vacinas.",
-      color: "#FFC300",
-      action: "vacina",
-      icon: "https://via.placeholder.com/50/FFC300/FFFFFF?text=💉" // Ícone substituível
-    },
-    {
-      label: "Agendar Exames",
-      description: "Marcar exames laboratoriais.",
-      color: "#28A745",
-      action: "agendar_exames",
-      icon: "https://via.placeholder.com/50/28A745/FFFFFF?text=📋" // Ícone substituível
-    },
-    {
-      label: "Retirar Resultados",
-      description: "Receber resultados de exames.",
-      color: "#C70039",
-      action: "retirar_resultados",
-      icon: "https://via.placeholder.com/50/C70039/FFFFFF?text=📄" // Ícone substituível
-    },
-    {
-      label: "Exames Agendados",
-      description: "Consulta de exames já marcados.",
-      color: "#900C3F",
-      action: "exames_agendados",
-      icon: "https://via.placeholder.com/50/900C3F/FFFFFF?text=📅" // Ícone substituível
-    }
-  ]
-})
+const isLoading = ref(false)
+const senhaNova = ref<QueueTicket | null>(null)
+const successModal = ref<HTMLElement | null>(null)
+let modalInstance: Modal | null = null
 
-// Método para executar as ações associadas aos botões
-const executarAcao = (action: string) => {
-  switch (action) {
-    case "orcamento":
-      console.log("Gerando senha para Atendimento/Orçamento")
-      break
-    case "preferencial":
-      console.log("Gerando senha para Preferencial")
-      break
-    case "vacina":
-      console.log("Gerando senha para Vacina")
-      break
-    case "agendar_exames":
-      console.log("Gerando senha para Agendar Exames")
-      break
-    case "retirar_resultados":
-      console.log("Gerando senha para Retirar Resultados")
-      break
-    case "exames_agendados":
-      console.log("Gerando senha para Exames Agendados")
-      break
-    default:
-      console.warn("Ação desconhecida:", action)
+const tiposAtendimento = [
+  {
+    label: 'Atendimento/Orçamento',
+    value: TipoSenha.ATENDIMENTO_ORCAMENTO,
+    description: 'Atendimento relacionado a orçamentos',
+    icon: 'bi-clipboard-data',
+    color: '#FF5733'
+  },
+  {
+    label: 'Preferencial',
+    value: TipoSenha.PREFERENCIAL,
+    description: 'Atendimento prioritário',
+    icon: 'bi-person-heart',
+    color: '#33FF57'
+  },
+  {
+    label: 'Vacina',
+    value: TipoSenha.VACINA,
+    description: 'Agendamento e aplicação de vacinas',
+    icon: 'bi-bandaid',
+    color: '#FFC300'
+  },
+  {
+    label: 'Agendar Exames',
+    value: TipoSenha.AGENDAR_EXAMES,
+    description: 'Marcar exames laboratoriais',
+    icon: 'bi-calendar-check',
+    color: '#28A745'
+  },
+  {
+    label: 'Retirar Resultados',
+    value: TipoSenha.RETIRAR_RESULTADOS,
+    description: 'Receber resultados de exames',
+    icon: 'bi-file-text',
+    color: '#C70039'
+  },
+  {
+    label: 'Exames Agendados',
+    value: TipoSenha.EXAMES_AGENDADOS,
+    description: 'Consulta de exames já marcados',
+    icon: 'bi-card-checklist',
+    color: '#900C3F'
+  }
+]
+
+const gerarSenha = async (tipo: TipoSenha) => {
+  try {
+    isLoading.value = true
+    senhaNova.value = await queueService.gerarSenha(tipo)
+    modalInstance?.show()
+    
+    setTimeout(() => {
+      modalInstance?.hide()
+      senhaNova.value = null
+    }, 5000)
+  } catch (error) {
+    console.error('Erro ao gerar senha:', error)
+  } finally {
+    isLoading.value = false
   }
 }
+
+onMounted(() => {
+  if (successModal.value) {
+    modalInstance = new Modal(successModal.value, {
+      backdrop: 'static',
+      keyboard: false
+    })
+  }
+})
 </script>
 
 <style scoped>
-/* Estilos personalizados para o componente Totem */
 .totem-container {
-  margin-top: 30px;
-}
-
-.card {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-}
-
-.icon-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  height: 100px; /* Ajuste a altura conforme necessário */
-}
-
-.card-icon {
-  width: 80px;
-  height: 80px;
-}
-
-.card-title {
-  font-size: 1.5rem;
-  color: #343a40; /* Cinza escuro */
-}
-
-.card-text {
-  font-size: 1rem;
-  color: #6c757d; /* Cinza padrão */
-}
-
-.toten-container {
   background-color: #f8f9fa;
 }
 
-/* Estilo dos cartões */
-.card {
+.service-card {
   border-radius: 12px;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
-.card:hover {
+.service-card:hover {
   transform: translateY(-5px);
   box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
@@ -173,28 +154,35 @@ const executarAcao = (action: string) => {
 .icon-wrapper {
   width: 80px;
   height: 80px;
-  margin: 0 auto;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
 }
 
-.icon {
-  width: 50%;
-  height: 50%;
-  object-fit: contain;
+.btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
 }
 
-.card-title {
-  font-size: 1.2rem;
+.btn-lg {
+  padding: 1rem 2rem;
+  border-radius: 8px;
+  transition: opacity 0.2s ease;
 }
 
-.card-body .btn {
-  color: white;
-}
-
-.card-body .btn:hover {
+.btn-lg:hover:not(:disabled) {
   opacity: 0.9;
 }
+
+@media (max-width: 768px) {
+  .display-4 {
+    font-size: 2.5rem;
+  }
+  
+  .lead {
+    font-size: 1rem;
+  }
+}
 </style>
+```
