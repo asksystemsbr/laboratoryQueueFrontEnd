@@ -44,7 +44,7 @@
               <i class="bi bi-check-circle-fill text-success fs-1"></i>
             </div>
             <h2 class="mb-4">Sua senha é:</h2>
-            <div class="display-1 fw-bold mb-4">{{ senhaNova?.numero }}</div>
+            <div class="display-1 fw-bold mb-4">{{ senhaNova }}</div>
             <p class="text-muted">Aguarde ser chamado no painel</p>
           </div>
         </div>
@@ -60,7 +60,7 @@ import { queueService } from '@/services/api'
 import { TipoSenha, type QueueTicket } from '@/types/queue'
 
 const isLoading = ref(false)
-const senhaNova = ref<QueueTicket | null>(null)
+const senhaNova = ref<string | null>(null);
 const successModal = ref<HTMLElement | null>(null)
 let modalInstance: Modal | null = null
 
@@ -111,20 +111,39 @@ const tiposAtendimento = [
 
 const gerarSenha = async (tipo: TipoSenha) => {
   try {
-    isLoading.value = true
-    senhaNova.value = await queueService.gerarSenha(tipo)
-    modalInstance?.show()
-    
+    console.log('Iniciando geração de senha para o tipo:', tipo);
+    isLoading.value = true;
+
+    // Chama o serviço para gerar a senha
+    const ticket = await queueService.gerarSenha(tipo);
+    console.log('Ticket gerado:', ticket);
+
+    // Armazena apenas o número da senha
+    senhaNova.value = ticket.numero;
+    console.log('Senha gerada com sucesso:', senhaNova.value);
+
+    // Mostra o modal com a senha
+    modalInstance?.show();
+
+    // Oculta o modal após 5 segundos
     setTimeout(() => {
-      modalInstance?.hide()
-      senhaNova.value = null
-    }, 5000)
-  } catch (error) {
-    console.error('Erro ao gerar senha:', error)
+      modalInstance?.hide();
+      senhaNova.value = null;
+    }, 5000);
+  } catch (error: any) {
+    if (error.response) {
+      console.error('Erro ao gerar senha (Resposta do servidor):', error.response.data);
+      console.error('Status HTTP:', error.response.status);
+    } else if (error.request) {
+      console.error('Erro ao gerar senha (Sem resposta do servidor):', error.request);
+    } else {
+      console.error('Erro ao gerar senha (Outro erro):', error.message);
+    }
   } finally {
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
+
 
 onMounted(() => {
   if (successModal.value) {

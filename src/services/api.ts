@@ -7,8 +7,9 @@ const api = axios.create({
 
 export const queueService = {
   async gerarSenha(tipo: TipoSenha): Promise<QueueTicket> {
-    const { data } = await api.post<QueueTicket>('/Queue/generate', { tipo })
-    return data
+    debugger
+    const { data } = await api.post<QueueTicket>('/Queue/generate', { serviceTypeCode: tipo });
+    return data;
   },
 
   async obterPainel(): Promise<QueueDisplay> {
