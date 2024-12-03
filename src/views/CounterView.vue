@@ -247,6 +247,8 @@ const guicheAtual = ref(1)
 const emAtendimento = ref(false)
 const senhaAtual = ref<QueueTicket | null>(null)
 const filaEspera = ref<QueueTicket[]>([])
+const isLoading = ref(false); // Variável de carregamento
+   
 
 // Modal e configurações
 const configModal = ref<HTMLElement | null>(null)
@@ -317,21 +319,6 @@ const toggleAtendimento = () => {
   emAtendimento.value = !emAtendimento.value
 }
 
-const chamarProxima = async () => {
-  try {
-    const proxima = filaEspera.value.shift()
-    if (proxima) {
-      senhaAtual.value = {
-        ...proxima,
-        status: 'EM_ATENDIMENTO',
-        guiche: guicheAtual.value
-      }
-    }
-  } catch (error) {
-    console.error('Erro ao chamar próxima senha:', error)
-  }
-}
-
 const finalizarAtendimento = async () => {
   try {
     if (senhaAtual.value) {
@@ -372,6 +359,32 @@ const salvarConfiguracoes = async () => {
     console.error('Erro ao salvar configurações:', error)
   }
 }
+
+const chamarProxima = async () => {
+  try {
+    // Ativar estado de carregamento
+    isLoading.value = true;
+
+    // Chamar a API para obter a próxima senha
+    const resposta = await queueService.chamarProximo(guicheAtual.value);
+    console.error('Erro ao chamar próxima senha:', resposta);
+    if (resposta) {
+      // Atualizar o estado da senha atual com os dados retornados da API
+      senhaAtual.value = {
+        ...resposta,
+        status: 'EM_ATENDIMENTO', // Atualiza o status da senha
+        guiche: guicheAtual.value, // Adiciona o número do guichê
+      };
+    } else {
+      console.warn('Nenhuma senha na fila');
+    }
+  } catch (error) {
+    console.error('Erro ao chamar próxima senha:', error);
+  } finally {
+    // Desativar estado de carregamento
+    isLoading.value = false;
+  }
+};
 
 
 // Lifecycle hooks

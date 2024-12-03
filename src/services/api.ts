@@ -18,8 +18,8 @@ export const queueService = {
   },
 
   async chamarProximo(guiche: number): Promise<QueueTicket | null> {
-    const { data } = await api.post<QueueTicket>('/Queue/call', { guiche })
-    return data
+    const { data } = await api.post<QueueTicket>(`/Queue/call`, { counterId: guiche }); // Ajustado para 'counterId'
+    return data;
   },
 
   async finalizarAtendimento(senhaId: number): Promise<void> {
