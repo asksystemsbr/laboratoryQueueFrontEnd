@@ -9,6 +9,15 @@ export interface QueueTicket {
   guiche: number;
   horario: Date;
   dataCriacao: Date;
+  serviceType?: {
+    id: number;
+    name: string;
+  };
+  calledAt?: string | null;
+  counter?: {
+    id: number;
+    name: string;
+  } | null;
 }
 
 export interface QueueDisplay {
