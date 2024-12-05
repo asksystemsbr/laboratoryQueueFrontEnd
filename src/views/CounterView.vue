@@ -293,26 +293,23 @@ const configuracoes = ref<Configuracoes>({
 
 
 // Mock de dados
-const mockFila: QueueTicket[] = [
-  { 
-    id: 1, 
-    numero: 'AO123', 
-    tipo: TipoSenha.ATENDIMENTO_ORCAMENTO, 
-    status: StatusSenha.AGUARDANDO,
-    guiche: 0, // Usar 0 em vez de undefined
-    horario: new Date(),
-    dataCriacao: new Date()
-  },
-  { 
-    id: 2, 
-    numero: 'P052', 
-    tipo: TipoSenha.PREFERENCIAL,
-    status: StatusSenha.AGUARDANDO,
-    guiche: 0,
-    horario: new Date(),
-    dataCriacao: new Date()
+const carregarFila = async (): Promise<void> => {
+  try {
+    const painel = await queueService.obterPainel(); // Obtém os dados reais da API
+    console.log(painel);
+    filaEspera.value = painel.waitingTickets; // Atualiza a fila com os registros reais
+  } catch (error) {
+    console.error('Erro ao carregar a fila:', error);
   }
-]
+};
+
+// Variável reativa para armazenar a fila
+const fila = ref<QueueTicket[]>([]);
+
+// Carrega a fila na inicialização do componente
+onMounted(() => {
+  carregarFila();
+});
 
 // Métodos de controle
 const toggleAtendimento = () => {
@@ -389,7 +386,7 @@ const chamarProxima = async () => {
 
 // Lifecycle hooks
 onMounted(() => {
-  filaEspera.value = mockFila
+ carregarFila
   
   if (configModal.value) {
     modalInstance = new Modal(configModal.value)
