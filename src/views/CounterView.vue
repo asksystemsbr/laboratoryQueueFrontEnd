@@ -292,26 +292,22 @@ const configuracoes = ref<Configuracoes>({
 })
 
 
-// Mock de dados
 const carregarFila = async (): Promise<void> => {
   try {
-    const painel = await queueService.obterPainel(); // Obtém os dados reais da API
+    const painel = await queueService.obterPainel();
     console.log(painel);
-    filaEspera.value = painel.waitingTickets; // Atualiza a fila com os registros reais
+    filaEspera.value = painel.waitingTickets;
   } catch (error) {
     console.error('Erro ao carregar a fila:', error);
   }
 };
 
-// Variável reativa para armazenar a fila
 const fila = ref<QueueTicket[]>([]);
 
-// Carrega a fila na inicialização do componente
 onMounted(() => {
   carregarFila();
 });
 
-// Métodos de controle
 const toggleAtendimento = () => {
   emAtendimento.value = !emAtendimento.value
 }
@@ -337,7 +333,6 @@ const rechamarSenha = async () => {
   }
 }
 
-// Métodos de configuração
 const abrirConfigGuiche = () => {
   if (modalInstance) {
     modalInstance.show()
@@ -346,7 +341,6 @@ const abrirConfigGuiche = () => {
 
 const salvarConfiguracoes = async () => {
   try {
-    // Integração futura com API
     guicheAtual.value = configuracoes.value.numeroGuiche
     
     if (modalInstance) {
@@ -359,7 +353,6 @@ const salvarConfiguracoes = async () => {
 
 const chamarProxima = async () => {
   try {
-    // Ativar estado de carregamento
     isLoading.value = true;
 
     // Chamar a API para obter a próxima senha
