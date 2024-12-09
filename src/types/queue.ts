@@ -20,11 +20,20 @@ export interface QueueTicket {
   } | null;
 }
 
+// export interface QueueDisplay {
+//   waitingTickets: QueueTicket[] | { id: number; numero: string; tipo: TipoSenha; status: StatusSenha; guiche: number; horario: Date; dataCriacao: Date; serviceType?: { id: number; name: string; } | undefined; calledAt?: (string | null) | undefined; counter?: { id: number; name: string; } | null | undefined; }[];
+//   atual: QueueTicket | null;
+//   espera: QueueTicket[];
+//   ultimasChamadas: QueueTicket[];
+// }
+
 export interface QueueDisplay {
-  atual: QueueTicket | null;
-  espera: QueueTicket[];
-  ultimasChamadas: QueueTicket[];
+  currentTicket: QueueTicket | null; // Alinha com "currentTicket" no backend
+  waitingTickets: QueueTicket[]; // Alinha com "waitingTickets" no backend
+  calledTickets?: QueueTicket[]; // Histórico de chamadas (opcional)
 }
+
+
 
 export const TipoSenha = {
   ATENDIMENTO_ORCAMENTO: 'AO',

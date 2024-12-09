@@ -14,6 +14,7 @@ export const queueService = {
 
   async obterPainel(): Promise<QueueDisplay> {
     const { data } = await api.get<QueueDisplay>('/Queue/display')
+    console.log('Resposta da API (Painel):', data)
     return data
   },
 
